@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Poker Outs and Equity Calculator</title>
+    <style>
+      /* Body Style */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        height: 100vh;
+        background-color: #2e3d34; /* Fallback color */
+        background-image: url("Images/cigar-chips-gamblings-drink-playing-cards.jpg");
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Add black overlay */
+      body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); /* 60% opacity black film */
+        z-index: 1; /* Ensure it sits above the background but below the content */
+      }
+
+      /* Card Style */
+      .card {
+        background-color: #35654d; /* Green poker table color */
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        width: 350px;
+        text-align: center;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2 columns */
+        grid-gap: 15px; /* Space between inputs */
+        min-height: 460px; /* Fixed height for consistent display */
+        z-index: 2; /* Ensure it appears above the overlay */
+      }
+
+      /* Heading Style */
+      h1 {
+        font-size: 24px;
+        color: white;
+        margin-bottom: 20px;
+        grid-column: span 2; /* Make the title span across both columns */
+      }
+
+      /* Form Group Styling */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        font-weight: bold;
+        color: white;
+        margin-bottom: 5px;
+        display: block;
+      }
+
+      input,
+      select {
+        width: 100%; /* Ensure all inputs have equal width */
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #aaa;
+        box-sizing: border-box; /* Include padding in width calculation */
+      }
+
+      /* Reset Button */
+      button {
+        padding: 10px 20px;
+        background-color: red; /* Red reset button */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        grid-column: span 2; /* Center the button in the layout */
+      }
+
+      button:hover {
+        background-color: #b30000;
+      }
+
+      /* Result and Decision Text */
+      #result {
+        font-weight: bold;
+        color: white;
+        grid-column: span 2;
+        visibility: hidden; /* Hidden by default */
+      }
+
+      #decision {
+        font-weight: bold;
+        color: #e3e907;
+        font-size: 24px;
+        margin-top: 10px;
+        grid-column: span 2; /* Center decision text */
+        visibility: hidden; /* Hidden by default */
+      }
+
+      /* Input Focus Style */
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #4caf50;
+      }
+
+      /* Placeholder Styling */
+      ::placeholder {
+        color: #aaa; /* Lighter gray for placeholder text */
+      }
+
+      select:invalid {
+        color: #aaa; /* Light gray for the unselected state */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Poker Odds and Equity Calculator</h1>
+      <div class="form-group">
+        <label for="potSize">Pot Size:</label>
+        <input
+          type="number"
+          id="potSize"
+          placeholder="Pot Size"
+          onfocus="this.value=''"
+          oninput="calculateEquity()"
+        />
+      </div>
+      <div class="form-group">
+        <label for="callAmount">Call Amount:</label>
+        <input
+          type="number"
+          id="callAmount"
+          placeholder="Call Amount"
+          onfocus="this.value=''"
+          oninput="calculateEquity()"
+        />
+      </div>
+      <div class="form-group">
+        <label for="outs">Outs:</label>
+        <input
+          type="number"
+          id="outs"
+          placeholder="Number Of Outs"
+          onfocus="this.value=''"
+          oninput="calculateEquity()"
+        />
+      </div>
+      <div class="form-group">
+        <label for="street">Street:</label>
+        <select id="street" onchange="calculateEquity()" required>
+          <option value="" disabled selected>Select a Street</option>
+          <option value="flop">Flop</option>
+          <option value="river">River</option>
+        </select>
+      </div>
+      <button onclick="resetForm()">Reset</button>
+      <p id="result"></p>
+      <p id="decision"></p>
+    </div>
+
+    <script>
+      function calculateEquity() {
+        const potSize = parseFloat(document.getElementById("potSize").value);
+        const callAmount = parseFloat(
+          document.getElementById("callAmount").value
+        );
+        const outs = parseFloat(document.getElementById("outs").value);
+        const street = document.getElementById("street").value;
+
+        // Validate inputs
+        if (isNaN(potSize) || isNaN(callAmount) || isNaN(outs)) {
+          document.getElementById("result").innerText =
+            "Please enter valid numbers in all fields.";
+          document.getElementById("decision").innerText = "";
+          document.getElementById("result").style.visibility = "visible";
+          return;
+        }
+
+        // Calculate Pot Odds
+        const potOdds = (callAmount / (potSize + callAmount)) * 100;
+
+        // Calculate Equity based on street
+        let equity;
+        if (street === "flop") {
+          equity = outs * 4; // Multiply outs by 4 for flop
+        } else if (street === "river") {
+          equity = outs * 2; // Multiply outs by 2 for river
+        }
+
+        // Display Pot Odds and Equity
+        document.getElementById(
+          "result"
+        ).innerText = `Pot Odds: ${potOdds.toFixed(
+          2
+        )}%, Estimated Equity: ${equity.toFixed(2)}%`;
+        document.getElementById("result").style.visibility = "visible";
+
+        // Determine "CALL" or "FOLD"
+        const decision = equity > potOdds ? "CALL" : "FOLD";
+        document.getElementById("decision").innerText = decision;
+        document.getElementById("decision").style.visibility = "visible";
+      }
+
+      function resetForm() {
+        document.getElementById("potSize").value = "";
+        document.getElementById("callAmount").value = "";
+        document.getElementById("outs").value = "";
+        document.getElementById("street").value = "";
+        document.getElementById("result").innerText = "";
+        document.getElementById("decision").innerText = "";
+        document.getElementById("result").style.visibility = "hidden";
+        document.getElementById("decision").style.visibility = "hidden";
+      }
+    </script>
+  </body>
+</html>
